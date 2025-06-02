@@ -1,0 +1,26 @@
+{
+  "name": "nestjs_test",
+  "version": "1.0.0",
+  "description": "使用者檔案權限系統\r 📖 題目背景：你正在為一個企業內部系統開發檔案管理模組。每個使用者可以上傳、下載、刪除檔案，並可設定特定使用者或群組的讀寫權限。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "kirsten",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KirstenC2/NestJs_Test.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KirstenC2/NestJs_Test/issues"
+  },
+  "homepage": "https://github.com/KirstenC2/NestJs_Test#readme",
+  "dependencies": {
+    "@nestjs/cli": "^11.0.7",
+    "@nestjs/typeorm": "^11.0.0",
+    "pg": "^8.16.0",
+    "typeorm": "^0.3.24"
+  }
+}
