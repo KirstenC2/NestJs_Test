@@ -58,4 +58,16 @@ export class FilesService {
     file.permissions = permissions;
     return file;
   }
+
+  /**
+   * Check if a user is the owner of a file
+   * @param fileId - The ID of the file to check
+   * @param userId - The ID of the user to check
+   * @returns boolean - True if the user is the owner, false otherwise
+   * @throws NotFoundException - If the file doesn't exist
+   */
+  isOwner(fileId: string, userId: string): boolean {
+    const file = this.findOne(fileId);
+    return file.userId === userId;
+  }
 }

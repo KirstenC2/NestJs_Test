@@ -49,7 +49,7 @@ Body:
 前端:
 有一個簡單的vue3頁面讓我們可以查詢使用者的檔案權限，並把以上API功能綁到UI上面。
 問答題：
-請說明 Middleware、Guard、Interceptor 在執行流程中的順序。
+請說明 Middleware、Guard、Interceptor 在執行流程中的順序。(Done)
 使用者擁有許多檔案，若要查詢「哪些檔案我擁有讀權限」，如何設計 SQL 查詢來避免 N+1 問題？
 在分散式架構下，檔案權限如何同步或快取才能保證效能與一致性？
 
@@ -91,9 +91,14 @@ Body:
     Client Request --> Middleware --> Guard --> Interceptor --> Controller --> Interceptor --> Response
 
 
-[Middleware] : Middleware 能access客戶端傳送過來的request與response的object，並執行特定的操作如變更，中斷，或繼續往下傳遞。
-[Guard] : Guard 的唯一責任為確認客戶端發送的請求會不會被後面的路徑執行處理，例如權限控制，role check等。會被稱為authorization
-[Interceptor] : Interceptor則是能bind extra logic，轉換或修改response，也可以完全override特定的功能，如loggingInterceptor。
+[Middleware]
+- Middleware 能access客戶端傳送過來的request與response的object，並執行特定的操作如變更，中斷，或繼續往下傳遞.
+
+[Guard]
+- Guard 的唯一責任為確認客戶端發送的請求會不會被後面的路徑執行處理，例如權限控制，role check等。會被稱為authorization.
+
+[Interceptor]
+- Interceptor則是能bind extra logic，轉換或修改response，也可以完全override特定的功能，如loggingInterceptor.
 
 
 
