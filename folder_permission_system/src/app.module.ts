@@ -1,10 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { FilesController } from './app.controller';
+import { FilesService } from './app.service';
+import { RootController } from './app.root.controller';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 @Module({
   imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [FilesController, RootController],
+  providers: [
+    FilesService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}
