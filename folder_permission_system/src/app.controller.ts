@@ -1,12 +1,12 @@
 // files.controller.ts
-import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFile, Res, ForbiddenException, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { FilesService } from './app.service';
-import { Permission } from './files/file.entity';
+import { RequirePermission } from './decorators/permission.decorator';
 
 // Define storage configuration for Multer
 const storage = diskStorage({
@@ -42,40 +42,58 @@ export class FilesController {
       permissions: [],
     };
     
-    return this.filesService.create(fileData);
+    return await this.filesService.create(fileData);
   }
 
   @Post(':id/permissions')
-  updatePermissions(
+  @RequirePermission('owner')
+  async updatePermissions(
     @Param('id') id: string,
-    @Body() body: { permissions: Permission[] },
-  ) {
-    return this.filesService.updatePermissions(id, body.permissions);
+    @Body() body: { userId: string, permission: string },
+  ): Promise<any> {
+    return await this.filesService.updatePermission(id, body.userId, body.permission);
+  }
+  
+  @Delete(':id/permissions/:userId')
+  @RequirePermission('owner')
+  async removePermission(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ): Promise<any> {
+    return await this.filesService.updatePermission(id, userId, 'none');
   }
 
   @Get('download/:id')
+  @RequirePermission('read')
   async downloadFile(@Param('id') id: string, @Res() res: Response) {
     const file = await this.filesService.findOne(id);
     return res.download(file.path, file.originalname);
   }
 
   @Post()
-  create(@Body() createFileDto: any) {
+  async create(@Body() createFileDto: any) {
     return this.filesService.create(createFileDto);
   }
 
   @Get()
-  findAll() {
-    return this.filesService.findAll();
+  async findAll(@Query('userId') userId: string) {
+    return this.filesService.findAll(userId);
+  }
+  
+  @Get('accessible')
+  async findAccessible(@Query('userId') userId: string) {
+    return this.filesService.findAccessible(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  @RequirePermission('read')
+  async findOne(@Param('id') id: string) {
     return this.filesService.findOne(id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @RequirePermission('owner')
+  async remove(@Param('id') id: string) {
     return this.filesService.remove(id);
   }
 

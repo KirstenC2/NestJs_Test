@@ -11,8 +11,27 @@ export class LoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<Request>();
     const { method, path, params, query, body } = request;
     
-    // Extract user information (this will be populated by auth middleware later)
-    const userId = request['user']?.id || 'anonymous';
+    // Extract user information from auth middleware or query params
+    // First try to get from auth middleware
+    let userId = request['user']?.id;
+    
+    // If not available, try to get from query params (for GET requests)
+    if (!userId && request.query?.userId) {
+      userId = request.query.userId as string;
+    }
+    
+    // If not available, try to get from body (for POST/PUT requests)
+    if (!userId && request.body?.userId) {
+      userId = request.body.userId;
+    }
+    
+    // Default to anonymous if still not found
+    userId = userId || 'anonymous';
+    
+    // Log auth info for debugging
+    if (userId === 'anonymous') {
+      this.logger.debug(`No user ID found in request. Auth header: ${request.headers.authorization ? 'Present' : 'Missing'}`);
+    }
     
     // Extract file ID from various possible sources
     const fileId = 
