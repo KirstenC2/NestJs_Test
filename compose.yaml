@@ -14,19 +14,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  api:
-    build: .
-    container_name: file-system
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USER: test_user
-      DATABASE_PASSWORD: test_password
-      DATABASE_NAME: files
 
 volumes:
   pgdata:

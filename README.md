@@ -67,10 +67,67 @@ Body:
     - [GET] /files/:id
 4. API: 刪除檔案
     - [DELETE] /files/:id
-5. API: 設定檔案權限 
+5. API: 設定檔案權限
     - [POST] /files/:id/permissions
 
+6. Create Database (Done)
+    - Users
+    - Files
+    - User-Permissions
 
+7. Add Logging Interceptor
+    - record API requested time, user, file id, operation type
+
+8. Add Guards
+    - PermissionsGuard
+    - UserGuard
+
+9. Vue3 Frontend
+    -  bind those 5 API to UI
+
+10. Explain the Process of Middleware, Guard, Interceptor (Half)
+
+
+    Client Request --> Middleware --> Guard --> Interceptor --> Controller --> Interceptor --> Response
+
+
+[Middleware] : Middleware 能access客戶端傳送過來的request與response的object，並執行特定的操作如變更，中斷，或繼續往下傳遞。
+[Guard] : Guard 的唯一責任為確認客戶端發送的請求會不會被後面的路徑執行處理，例如權限控制，role check等。會被稱為authorization
+[Interceptor] : Interceptor則是能bind extra logic，轉換或修改response，也可以完全override特定的功能，如loggingInterceptor。
+
+
+
+12. 使用者擁有許多檔案，若要查詢「哪些檔案我擁有讀權限」，如何設計 SQL 查詢來避免 N+1 問題？ (Done)
+- N+1 問題：
+    - 每次查詢一個檔案時，都需要查詢一次權限然後需要查詢多次
+    答：一般使用join table的方式能避免N+1問題
+    這邊設計的方式為user + user_permission + files
+    
+    當查詢user在讀取檔案的權限上，基本上需要關聯到全體tables
+    解法1：
+    1. 開始先查詢user的權限
+    ```
+    select user_id, file_id from user_permission where user_id = 'user_id' AND user_permissions.can_read = TRUE;
+    ```
+    2. 然後再用前面拿到的file_id去查詢file的相關資料
+    ```
+    select * from files f where f.id = 'f1f1f1f1-f1f1-f1f1-f1f1-f1f1f1f1f1f1';
+    ```
+    
+    但是，這樣就會出現n+1的問題。
+
+    最優解：
+    同時集合查詢多個table （join）
+    ```
+    select file_id,filename,can_read from user_permissions u 
+    left join files f on u.file_id = f.id
+    where u.user_id = 'user_id'
+    ;
+    ```
+
+
+
+13. 在分散式架構下，檔案權限如何同步或快取才能保證效能與一致性？
 
 ## Step 1: To create a nestjs project
 ```
@@ -84,3 +141,36 @@ npm run start:dev
 ```
 This line of command will start a hot reload for NestJs project.
 
+
+
+## Step 3: Create Database
+```
+-- 1. Users
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+-- 4. Files
+CREATE TABLE files (
+    id UUID PRIMARY KEY,
+    filename TEXT NOT NULL,
+    owner_id UUID NOT NULL,
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- 5. User-level file permissions
+CREATE TABLE user_permissions (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    file_id UUID NOT NULL,
+    can_read BOOLEAN DEFAULT FALSE,
+    can_write BOOLEAN DEFAULT FALSE,
+    can_delete BOOLEAN DEFAULT FALSE,
+    UNIQUE (user_id, file_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
+);
+
+
+```

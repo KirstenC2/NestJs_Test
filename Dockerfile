@@ -7,11 +7,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # 安裝nestjs 的dependencies
-RUN npm install @nestjs/typeorm typeorm pg @nestjs/cli
-
+RUN npm install @nestjs/typeorm typeorm pg @nestjs/cli @nestjs/common @types/multer
 
 # 複製
 COPY . .
 
 # 編譯 NestJS 專案（TypeScript -> JavaScript）
-RUN npm run build
+RUN npx run build
