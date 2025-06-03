@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import fileService, { type FileRecord, type Permission } from '../services/fileService'
+import fileService, { type FileRecord, type PermissionRequest } from '../services/fileService'
 
 export const useFileStore = defineStore('file', () => {
   // State
@@ -20,6 +20,21 @@ export const useFileStore = defineStore('file', () => {
       console.error('Error fetching files:', err)
       error.value = 'Failed to load files'
       loading.value = false
+    }
+  }
+  
+  const fetchAccessibleFiles = async () => {
+    loading.value = true
+    error.value = ''
+    try {
+      const accessibleFiles = await fileService.getAccessibleFiles()
+      loading.value = false
+      return accessibleFiles
+    } catch (err) {
+      console.error('Error fetching accessible files:', err)
+      error.value = 'Failed to load accessible files'
+      loading.value = false
+      return []
     }
   }
 
@@ -112,25 +127,20 @@ export const useFileStore = defineStore('file', () => {
     }
   }
 
-  const updatePermissions = async (fileId: string, permissions: Permission[]) => {
+  const updatePermission = async (fileId: string, permission: PermissionRequest) => {
     loading.value = true
     error.value = ''
     try {
-      const updatedFile = await fileService.updatePermissions(fileId, permissions)
-      if (selectedFile.value && selectedFile.value.id === fileId) {
-        selectedFile.value = updatedFile
-      }
-      files.value = files.value.map((file: FileRecord) => {
-        if (file.id === fileId) {
-          return { ...file, permissions }
-        }
-        return file
-      })
+      const result = await fileService.updatePermission(fileId, permission)
+      
+      // Refresh the file data to get updated permissions
+      await fetchFileById(fileId)
+      
       loading.value = false
-      return updatedFile
+      return result
     } catch (err) {
-      console.error(`Error updating permissions for file ${fileId}:`, err)
-      error.value = 'Failed to update permissions'
+      console.error(`Error updating permission for file ${fileId}:`, err)
+      error.value = 'Failed to update permission'
       loading.value = false
       return null
     }
@@ -149,12 +159,13 @@ export const useFileStore = defineStore('file', () => {
     error,
     // Actions
     fetchFiles,
+    fetchAccessibleFiles,
     fetchFileById,
-    createFile,
     uploadFile,
+    createFile,
     downloadFile,
     deleteFile,
-    updatePermissions,
+    updatePermission,
     // Getters
     getFileById
   }

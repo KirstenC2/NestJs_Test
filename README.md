@@ -13,7 +13,7 @@ Body:
 ```
 使用者上傳檔案後，該使用者成為檔案的擁有者。
 
-2. 取得使用者可見的檔案列表（GET /files）
+2. 取得使用者可見的檔案列表（GET /files） - Done
 回傳該使用者有「讀取權限」的所有檔案。
 
 3. 下載檔案（GET /files/:id）
@@ -22,7 +22,7 @@ Body:
 4. 刪除檔案（DELETE /files/:id）
 只能由該檔案的擁有者執行刪除。
 
-5. 設定檔案權限（POST /files/:id/permissions）
+5. 設定檔案權限（POST /files/:id/permissions） - Done
 
 Body:
 ```
@@ -50,7 +50,7 @@ Body:
 有一個簡單的vue3頁面讓我們可以查詢使用者的檔案權限，並把以上API功能綁到UI上面。
 問答題：
 請說明 Middleware、Guard、Interceptor 在執行流程中的順序。(Done)
-使用者擁有許多檔案，若要查詢「哪些檔案我擁有讀權限」，如何設計 SQL 查詢來避免 N+1 問題？
+使用者擁有許多檔案，若要查詢「哪些檔案我擁有讀權限」，如何設計 SQL 查詢來避免 N+1 問題？(Done)
 在分散式架構下，檔案權限如何同步或快取才能保證效能與一致性？
 
 加分題 :
@@ -69,6 +69,9 @@ Body:
     - [DELETE] /files/:id
 5. API: 設定檔案權限
     - [POST] /files/:id/permissions
+    ```
+    curl -X POST "http://localhost:3000/files/{file_id}/permissions" -H "Content-Type: application/json" -H "Authorization: Bearer any-user-id" -d '{"userId": "{user_id}", "permission": "read"}'
+    ```
 
 6. Create Database (Done)
     - Users
@@ -79,8 +82,7 @@ Body:
     - record API requested time, user, file id, operation type
 
 8. Add Guards
-    - PermissionsGuard
-    - UserGuard
+    - PermissionsGuard (Done)
 
 9. Vue3 Frontend
     -  bind those 5 API to UI
@@ -177,5 +179,12 @@ CREATE TABLE user_permissions (
     FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
 );
 
-
 ```
+
+## Step 4: Prepare Entities
+There are 3 entities(objects):
+1. User
+2. File
+3. Permission
+
+

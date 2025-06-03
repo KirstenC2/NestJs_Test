@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../views/FilesView.vue')
     },
     {
+      path: '/accessible-files',
+      name: 'accessible-files',
+      component: () => import('../views/AccessibleFilesView.vue')
+    },
+    {
       path: '/permissions',
       name: 'permissions',
       component: () => import('../views/PermissionsView.vue')

@@ -6,11 +6,11 @@
   <div class="app-container">
     <header class="main-header">
       <div class="container">
-        <h1 class="app-title">Folder Management System</h1>
+        <h1 class="app-title">使用者檔案權限系統</h1>
         <nav class="main-nav">
-          <router-link to="/" class="nav-link">Home</router-link>
-          <router-link to="/files" class="nav-link">Files</router-link>
-          <router-link to="/permissions" class="nav-link">Permissions</router-link>
+          <!-- <router-link to="/" class="nav-link">主頁</router-link> -->
+          <router-link to="/files" class="nav-link">我的檔案</router-link>
+          <router-link to="/permissions" class="nav-link">權限管理</router-link>
         </nav>
       </div>
     </header>
@@ -21,7 +21,7 @@
     
     <footer class="main-footer">
       <div class="container">
-        <p>&copy; 2025 Folder Management System</p>
+        <p>&copy; 2025 使用者檔案權限系統</p>
       </div>
     </footer>
   </div>
