@@ -22,7 +22,23 @@ export class LoggingInterceptor implements NestInterceptor {
       .pipe(
         tap(data => {
           const delay = Date.now() - now;
-          console.log(`API Response (${delay}ms):`, JSON.stringify(data).substring(0, 200));
+          
+          // Safely log the response data
+          try {
+            if (data === undefined || data === null) {
+              console.log(`API Response (${delay}ms): [No data]`);
+            } else if (data instanceof Buffer || req.url.includes('/download/')) {
+              // Handle binary data like file downloads
+              console.log(`API Response (${delay}ms): [Binary data / File download]`);
+            } else {
+              // Try to stringify and truncate for regular JSON responses
+              const stringified = JSON.stringify(data);
+              console.log(`API Response (${delay}ms):`, stringified ? stringified.substring(0, 200) : '[Unstringifiable data]');
+            }
+          } catch (error) {
+            console.log(`API Response (${delay}ms): [Error logging response: ${error.message}]`);
+          }
+          
           console.log('--------------------------------------------');
         }),
       );

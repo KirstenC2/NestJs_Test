@@ -44,6 +44,14 @@
           <button class="btn small" @click="viewFilePermissions(file)">
             權限管理
           </button>
+          <!-- Download button - shown if user has read permission -->
+          <button 
+            class="btn small primary" 
+            @click="downloadFile(file)"
+            :disabled="!hasReadPermission(file)"
+          >
+            下載檔案
+          </button>
           <!-- Only show delete button if user is the owner -->
           <button 
             v-if="isOwner(file)" 
@@ -111,7 +119,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFileStore } from '../stores/fileStore';
 import { useUserStore } from '../stores/userStore';
-import type { FileRecord } from '../services/fileService';
+import fileService, { type FileRecord } from '../services/fileService';
 import UserSelector from '../components/UserSelector.vue';
 
 const router = useRouter();
@@ -295,16 +303,37 @@ async function deleteSelectedFile() {
   }
 }
 
-// Check if current user is the owner of the file
+// Check if current user is owner of file
 function isOwner(file: FileRecord): boolean {
-  if (!file) return false;
+  if (!file || !userStore.currentUserId) return false;
+  const fileOwnerId = file.ownerId || file.userId;
+  return fileOwnerId === userStore.currentUserId;
+}
+
+// Check if current user has read permission for file
+function hasReadPermission(file: FileRecord): boolean {
+  // Owner always has read permission
+  if (isOwner(file)) return true;
   
-  // Compare the current user ID from the store with the file's user ID
+  // Check if there's a permission record for this user
+  if (file.permissions && file.permissions.length > 0) {
+    const userPermission = file.permissions.find(
+      p => p.userId === userStore.currentUserId
+    );
+    return userPermission ? userPermission.canRead : false;
+  }
+  
+  return false;
+}
+
+// Download file
+async function downloadFile(file: FileRecord) {
   try {
-    return file.userId === userStore.currentUserId;
-  } catch (err) {
-    console.error('Error checking file ownership:', err);
-    return false; // Default to false on any error
+    console.log('Downloading file:', file.id, file.originalname);
+    await fileService.downloadFile(file.id, file.originalname);
+  } catch (error: any) {
+    console.error('Download failed:', error);
+    localError.value = `下載失敗: ${error.message || '未知錯誤'}`;
   }
 }
 </script>

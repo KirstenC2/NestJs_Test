@@ -32,7 +32,41 @@ export interface PermissionRequest {
 }
 
 // Service for handling file operations
-export const fileService = {
+const fileService = {
+  // Download a file
+  async downloadFile(fileId: string, filename: string): Promise<void> {
+    try {
+      // Get current user from store
+      const userStore = useUserStore();
+      const userId = userStore.currentUserId;
+      
+      console.log(`Downloading file ${fileId} for user: ${userId}`);
+      
+      const response = await api.get(`/files/download/${fileId}`, {
+        responseType: 'blob', // Important for file downloads
+        headers: {
+          'Authorization': `Bearer ${userId}`
+        }
+      });
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename); // Set the filename
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      console.log('File download successful');
+    } catch (error: any) {
+      console.error('File download failed:', error);
+      throw error;
+    }
+  },
   // Get all files
   async getFiles(): Promise<FileRecord[]> {
     // Get current user from store
@@ -109,13 +143,7 @@ export const fileService = {
     }
   },
 
-  // Download a file
-  async downloadFile(id: string): Promise<Blob> {
-    const response = await api.get(`/files/download/${id}`, {
-      responseType: 'blob',
-    });
-    return response.data;
-  },
+  // This duplicate downloadFile method has been removed as we now have a more comprehensive version above
 
   // Create a new file (metadata only)
   async createFile(file: Omit<FileRecord, 'id'>): Promise<FileRecord> {
@@ -266,4 +294,5 @@ export const fileService = {
   }
 };
 
-export default fileService
+// Default export for the file service
+export default fileService;

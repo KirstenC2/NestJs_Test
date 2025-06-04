@@ -89,15 +89,8 @@ export const useFileStore = defineStore('file', () => {
     loading.value = true
     error.value = ''
     try {
-      const blob = await fileService.downloadFile(id)
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      // Use the fileService's downloadFile method which now handles the full download process
+      await fileService.downloadFile(id, filename)
       loading.value = false
       return true
     } catch (err) {
