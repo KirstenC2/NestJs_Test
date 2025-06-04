@@ -1,0 +1,285 @@
+openapi: '3.0.3'
+info:
+  title: File Permission System API
+  version: '1.0'
+  description: API for managing files and permissions in the file permission system
+servers:
+  - url: http://localhost:3000
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Permission:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user
+        fileId:
+          type: string
+          format: uuid
+          description: ID of the file
+        canRead:
+          type: boolean
+          description: Whether the user can read the file
+        canWrite:
+          type: boolean
+          description: Whether the user can write to the file
+        canDelete:
+          type: boolean
+          description: Whether the user can delete the file
+    File:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the file
+        originalname:
+          type: string
+          description: Original name of the uploaded file
+        filename:
+          type: string
+          description: Name of the file on the server
+        mimetype:
+          type: string
+          description: MIME type of the file
+        size:
+          type: integer
+          description: Size of the file in bytes
+        path:
+          type: string
+          description: Path to the file on the server
+        uploadDate:
+          type: string
+          format: date-time
+          description: Date and time when the file was uploaded
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user who uploaded the file
+        ownerId:
+          type: string
+          format: uuid
+          description: ID of the file owner
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+          description: List of permissions for the file
+    PermissionRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user to grant permissions to
+        permission:
+          type: string
+          enum: [read, write, delete, none]
+          description: Permission level to grant (none removes all permissions)
+paths:
+  /files: 
+    get:
+      summary: Get files accessible to the user
+      description: Returns a list of files that the user has read access to
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: ID of the user to get accessible files for
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/File'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+    post:
+      summary: Upload a new file
+      description: Upload a new file to the system
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload
+                userId:
+                  type: string
+                  format: uuid
+                  description: ID of the user uploading the file
+      responses:
+        '201':
+          description: File created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+  
+  /files/{id}:
+    get:
+      summary: Get file by ID
+      description: Returns a single file by its ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the file to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '401':
+          description: Unauthorized
+        '404':
+          description: File not found
+    delete:
+      summary: Delete a file
+      description: Deletes a file by its ID (only file owner can delete)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the file to delete
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - user is not the file owner
+        '404':
+          description: File not found
+  
+  /files/download/{id}:
+    get:
+      summary: Download a file
+      description: Downloads a file by its ID (requires read permission)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the file to download
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - user does not have read permission
+        '404':
+          description: File not found
+  
+  /files/{id}/permissions:
+    post:
+      summary: Add or update file permissions
+      description: Adds or updates permissions for a specific user on a file (only file owner can modify permissions)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the file to update permissions for
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionRequest'
+      responses:
+        '200':
+          description: Permission updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - user is not the file owner
+        '404':
+          description: File not found
+  
+  /files/{id}/permissions/{userId}:
+    delete:
+      summary: Remove file permissions
+      description: Removes all permissions for a specific user on a file (only file owner can remove permissions)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the file to remove permissions from
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          description: ID of the user to remove permissions for
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Permission removed successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - user is not the file owner
+        '404':
+          description: File or user not found
