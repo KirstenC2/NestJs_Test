@@ -14,6 +14,22 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  backend:
+    build: ./folder_permission_system
+    container_name: file-api-backend
+    restart: always
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: test_user
+      DATABASE_PASSWORD: test_password
+      DATABASE_NAME: files
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./folder_permission_system/uploads:/app/uploads
 
 volumes:
   pgdata:
